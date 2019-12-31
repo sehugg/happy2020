@@ -106,27 +106,6 @@ void animate(void) {
   }
 }
 
-// erase random snowflakes
-void melt(void) {
-  for (byte i=0; i<10; i++) {
-    // get random screen position
-    word pos = rand16();
-    // is in bounds?
-    if (pos < 84*160) {
-      byte flake = readflake(pos);
-      // look for a lit pixel that isn't color 2 or 3 (must be 1)
-      // and has no neighbor on either left or right
-      if (flake && !(flake & 0b10101010)) {
-        if (readflake(pos-1) == 0	// dark pixel on left
-         || readflake(pos+1) == 0	// dark pixel on right
-        ) {
-          drawflake(pos);		// erase snowflake
-        }
-      }
-    }
-  }
-}
-
 void main(void) {
   // setup palette
   set_palette(palette);
@@ -138,8 +117,8 @@ void main(void) {
   // clear screen w/ SYS_FILL macro
   SYS_FILL(0x4000, 89*40, 0);
   // 4x4 must have X coordinate multiple of 4
-  display_string(4, 12, OPT_4x4|M_OR|OPT_ON(2), "HAPPY");
   display_string(4, 13, OPT_4x4|M_OR|OPT_ON(2), "HAPPY");
+  display_string(4, 14, OPT_4x4|M_OR|OPT_ON(2), "HAPPY");
   display_string(20, 47, OPT_4x4|M_OR|OPT_ON(3), "2020");
   display_string(20, 48, OPT_4x4|M_OR|OPT_ON(3), "2020");
   // more compact macro
@@ -154,7 +133,6 @@ void main(void) {
   // endless loop
   while (1) {
     animate();
-    melt();
     if (warm) warm--;
   }
 }
