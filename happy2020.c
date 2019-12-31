@@ -116,10 +116,13 @@ bool melt(void) {
     if (lsb) pos ^= 0xb400;
     // is pixel within screen bounds?
     if (pos < MAX_Y*160) {
-      // melt pixels that have empty space above
+      // only melt pixels that have no snow above
       if (issnow(pos) && (pos < 160 || !issnow(pos-160))) {
-        drawflake(pos);
-        melted = 1;
+        // prefer to melt pixels with no snow on either side
+        if (rand16() & 1 || !issnow(pos-1) || !issnow(pos+1)) {
+          drawflake(pos);
+          melted = 1;
+        }
       }
     }
   } while (pos != 1); // loop until LFSR is where we started
