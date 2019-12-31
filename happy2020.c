@@ -107,14 +107,22 @@ bool animate(bool created) {
 
 bool melt(void) {
   bool melted = 0;
-  // iterate from bottom to top of screen
-  for (word pos=160*(MAX_Y-1); pos!=0; pos--) {
-    // melt pixels that have empty space above
-    if (issnow(pos) && (pos < 160 || !issnow(pos-160))) {
-      drawflake(pos);
-      melted = 1;
+  word pos = 1;
+  byte lsb;
+  do {
+    // use Galois LFSR to randomly select pixels
+    lsb = pos & 1;
+    pos >>= 1;
+    if (lsb) pos ^= 0xb400;
+    // is pixel within screen bounds?
+    if (pos < MAX_Y*160) {
+      // melt pixels that have empty space above
+      if (issnow(pos) && (pos < 160 || !issnow(pos-160))) {
+        drawflake(pos);
+        melted = 1;
+      }
     }
-  }
+  } while (pos != 1); // loop until LFSR is where we started
   return melted; // true if any pixels melted
 }
 
