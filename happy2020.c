@@ -93,7 +93,7 @@ void animate(void) {
       // create a new random snowfake at top (only once per loop)
       oldpos = 1 + rand16() % 158;
       // make sure snowdrift didn't pile to top of screen
-      if (readflake(oldpos) && readflake(oldpos+160)) {
+      if (readflake(oldpos) && readflake(oldpos+160) && !warm) {
         // screen is full, go to warm mode for awhile
         warm = 1000;
       } else {
