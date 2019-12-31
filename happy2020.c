@@ -106,11 +106,11 @@ bool animate(bool created) {
 }
 
 bool melt(void) {
-  bool melted = 0; // did we melt any?
+  bool melted = 0;
   // iterate from bottom to top of screen
-  for (word pos=160*(MAX_Y-1); pos>160; pos--) {
+  for (word pos=160*(MAX_Y-1); pos!=0; pos--) {
     // melt pixels that have empty space above
-    if (issnow(pos) && !issnow(pos-160)) {
+    if (issnow(pos) && (pos < 160 || !issnow(pos-160))) {
       drawflake(pos);
       melted = 1;
     }
@@ -150,7 +150,11 @@ void main(void) {
     while (animate(false)) ;
     // finish falling snowflakes, don't create any
     for (i=0; i<100; i++) animate(true);
+    // blue sky
+    hw_col0r = hw_col0l = 0xe2;
     // melt the snow
     while (melt()) ;
+    // night sky
+    hw_col0r = hw_col0l = palette[3];
   }
 }
