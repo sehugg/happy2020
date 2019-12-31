@@ -102,24 +102,20 @@ bool animate(bool created) {
       }
     }
   }
-  return true; // success
+  return true; // true if screen isn't full
 }
 
 bool melt(void) {
-  // start at random index
-  word pos1 = 0;
-  word pos = 160*(MAX_Y-2);
-  bool melted = 0;
-  // melt 160 pixels, starting from pos
-  while (pos > 0) {
-    // make sure empty space above
-    if (issnow(pos+160) && !issnow(pos)) {
-      drawflake(pos+160);
+  bool melted = 0; // did we melt any?
+  // iterate from bottom to top of screen
+  for (word pos=160*(MAX_Y-1); pos>160; pos--) {
+    // melt pixels that have empty space above
+    if (issnow(pos) && !issnow(pos-160)) {
+      drawflake(pos);
       melted = 1;
     }
-    pos--;
   }
-  return melted;
+  return melted; // true if any pixels melted
 }
 
 void main(void) {
@@ -144,6 +140,7 @@ void main(void) {
   activate_interrupts();
   // make sure screen doesn't black out
   RESET_TIMEOUT();
+  
   // loop forever
   while (true) {
     byte i;
@@ -151,9 +148,9 @@ void main(void) {
     memset(flakes, 0, sizeof(flakes));
     // animate snowflakes until they pile up too high
     while (animate(false)) ;
-    // snowflakes still fall, but no creation
+    // finish falling snowflakes, don't create any
     for (i=0; i<100; i++) animate(true);
-    // melt everything
+    // melt the snow
     while (melt()) ;
   }
 }
