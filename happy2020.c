@@ -49,7 +49,7 @@ byte readflake(word pos) {
   return *dest & READMASK[pos&3];
 }
 
-word warm = 0; // warm timer (0 = pile up, >0 = melt stuff)
+word warm; // warm timer (0 = pile up, >0 = melt stuff)
 
 void animate(void) {
   byte created = 0;
@@ -131,8 +131,8 @@ void main(void) {
   // initialize snowflake array  
   memset(flakes, 0, sizeof(flakes));
   // endless loop
-  while (1) {
+  warm = 0;
+  while (!warm) {
     animate();
-    if (warm) warm--;
   }
 }
