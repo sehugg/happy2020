@@ -108,7 +108,7 @@ void animate(void) {
 
 // erase random snowflakes
 void melt(void) {
-  for (byte i=0; i<5; i++) {
+  for (byte i=0; i<10; i++) {
     // get random screen position
     word pos = rand16();
     // is in bounds?
@@ -138,11 +138,13 @@ void main(void) {
   // clear screen w/ SYS_FILL macro
   SYS_FILL(0x4000, 89*40, 0);
   // 4x4 must have X coordinate multiple of 4
-  display_string(4, 12, OPT_4x4|OPT_ON(2), "HAPPY");
-  display_string(20, 45, OPT_4x4|OPT_ON(3), "2020");
+  display_string(4, 12, OPT_4x4|M_OR|OPT_ON(2), "HAPPY");
+  display_string(4, 13, OPT_4x4|M_OR|OPT_ON(2), "HAPPY");
+  display_string(20, 47, OPT_4x4|M_OR|OPT_ON(3), "2020");
+  display_string(20, 48, OPT_4x4|M_OR|OPT_ON(3), "2020");
   // more compact macro
-  SYS_RECTAN(0, 84, 160, 4, 0xaa);
-  display_string(32, 75, OPT_OR|OPT_ON(3), "8BITWORKSHOP");
+  SYS_RECTAN(0, 87, 160, 2, 0xaa);
+  display_string(32, 80, OPT_OR|OPT_ON(3), "8BITWORKSHOP");
   // infinite loop
   activate_interrupts();
   // make sure screen doesn't black out
