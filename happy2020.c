@@ -9,10 +9,12 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define MAX_Y 89
+
 /*{pal:"astrocade",layout:"astrocade"}*/
 const byte palette[8] = {
-  0x77, 0xD4, 0x07, 0x01,
-  0x66, 0xD4, 0x07, 0x01,
+  0x6C, 0xD3, 0x07, 0x01,
+  0x66, 0xD3, 0x07, 0x01,
 };
 
 // fast random numbers
@@ -49,10 +51,13 @@ byte readflake(word pos) {
   return *dest & READMASK[pos&3];
 }
 
-word warm; // warm timer (0 = pile up, >0 = melt stuff)
+// is pixel lit, and is snow color (not 2 or 3)?
+bool issnow(word pos) {
+  byte bg = readflake(pos);
+  return bg && !(bg & 0b10101010);
+}
 
-void animate(void) {
-  byte created = 0;
+bool animate(bool created) {
   for (byte i=0; i<MAX_FLAKES; i++) {
     // get old position in array
     word oldpos = flakes[i];
@@ -64,20 +69,13 @@ void animate(void) {
       // read pixel at new pos
       bg = readflake(newpos);
       if (bg) {
-        // in warm mode, just erase the pixels
-        if (warm) {
-          drawflake(oldpos);
-          drawflake(newpos);
-          newpos = 0;
+        // cold mode, slide pixel left or right to empty space
+        if (!readflake(newpos+1)) {
+          newpos++;
+        } else if (!readflake(newpos-1)) {
+          newpos--;
         } else {
-          // cold mode, slide pixel left or right to empty space
-          if (!readflake(newpos+1)) {
-            newpos++;
-          } else if (!readflake(newpos-1)) {
-            newpos--;
-          } else {
-            newpos = 0;	// get rid of snowflake
-          }
+          newpos = 0;	// get rid of snowflake
         }
       }
       // if we didn't get rid of it, erase and redraw
@@ -93,9 +91,9 @@ void animate(void) {
       // create a new random snowfake at top (only once per loop)
       oldpos = 1 + rand16() % 158;
       // make sure snowdrift didn't pile to top of screen
-      if (readflake(oldpos) && readflake(oldpos+160) && !warm) {
-        // screen is full, go to warm mode for awhile
-        warm = 1000;
+      if (readflake(oldpos) && readflake(oldpos+160)) {
+        // screen is full, exit
+        return false;
       } else {
         // create new snowflake, draw it
         flakes[i] = oldpos;
@@ -104,6 +102,24 @@ void animate(void) {
       }
     }
   }
+  return true; // success
+}
+
+bool melt(void) {
+  // start at random index
+  word pos1 = 0;
+  word pos = 160*(MAX_Y-2);
+  bool melted = 0;
+  // melt 160 pixels, starting from pos
+  while (pos > 0) {
+    // make sure empty space above
+    if (issnow(pos+160) && !issnow(pos)) {
+      drawflake(pos+160);
+      melted = 1;
+    }
+    pos--;
+  }
+  return melted;
 }
 
 void main(void) {
@@ -128,11 +144,16 @@ void main(void) {
   activate_interrupts();
   // make sure screen doesn't black out
   RESET_TIMEOUT();
-  // initialize snowflake array  
-  memset(flakes, 0, sizeof(flakes));
-  // endless loop
-  warm = 0;
-  while (!warm) {
-    animate();
+  // loop forever
+  while (true) {
+    byte i;
+    // initialize snowflake array  
+    memset(flakes, 0, sizeof(flakes));
+    // animate snowflakes until they pile up too high
+    while (animate(false)) ;
+    // snowflakes still fall, but no creation
+    for (i=0; i<100; i++) animate(true);
+    // melt everything
+    while (melt()) ;
   }
 }
