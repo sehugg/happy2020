@@ -57,6 +57,16 @@ bool issnow(word pos) {
   return bg && !(bg & 0b10101010);
 }
 
+// just return the snow pixels in a byte
+byte isolatesnow(byte p) {
+  // isolate the static pixels (colors 2 and 3)
+  byte bg = (p & 0b10101010);
+  byte mask = bg | (bg >> 1);
+  // return everything else (just color 1)
+  return p & ~mask;
+}
+
+// animate snow one pixel downward
 bool animate(bool created) {
   for (byte i=0; i<MAX_FLAKES; i++) {
     // get old position in array
@@ -105,28 +115,36 @@ bool animate(bool created) {
   return true; // true if screen isn't full
 }
 
+// erase snow psuedo-randomly until it's all melted
 bool melt(void) {
   bool melted = 0;
-  word pos = 1;
+  word addr = 1;
   byte lsb;
   do {
-    // use Galois LFSR to randomly select pixels
-    lsb = pos & 1;
-    pos >>= 1;
-    if (lsb) pos ^= 0b10000000010101;
-    pos &= 0x3fff;
-    // is pixel within screen bounds?
-    if (pos < MAX_Y*160) {
-      // only melt pixels that have no snow above
-      if (issnow(pos) && (pos < 160 || !issnow(pos-160))) {
-        // prefer to melt pixels with no snow on either side
-        if (rand16() & 1 || !issnow(pos-1) || !issnow(pos+1)) {
-          drawflake(pos);
+    // use Galois LFSR to randomly select addresses
+    lsb = addr & 1;
+    addr >>= 1;
+    if (lsb) addr ^= 0b100000101001; // period = 4095
+    // is address within screen bounds?
+    if (addr < MAX_Y*40) {
+      // get 4 pixels at address
+      byte p = vidmem[0][addr];
+      // might there be snow? (at least one pixel = color 1)
+      if (p & 0b01010101) {
+        // get snow pixels above
+        byte pup = addr >= 40 ? isolatesnow(vidmem[-1][addr]) : 0;
+        p = isolatesnow(p);
+        // melt if we have no snow above
+        if (p && !pup) {
+          // choose random pixels (if zero, we won't use it)
+          byte p2 = p & rand16();
+          // XOR snow pixels to erase
+          vidmem[0][addr] ^= p2 ? p2 : p;
           melted = 1;
         }
       }
     }
-  } while (pos != 1); // loop until LFSR is where we started
+  } while (addr != 1); // loop until LFSR is where we started
   return melted; // true if any pixels melted
 }
 
