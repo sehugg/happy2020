@@ -113,7 +113,8 @@ bool melt(void) {
     // use Galois LFSR to randomly select pixels
     lsb = pos & 1;
     pos >>= 1;
-    if (lsb) pos ^= 0b1000000000011111;
+    if (lsb) pos ^= 0b10000000010101;
+    pos &= 0x3fff;
     // is pixel within screen bounds?
     if (pos < MAX_Y*160) {
       // only melt pixels that have no snow above
